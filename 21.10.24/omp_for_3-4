@@ -1,0 +1,106 @@
+#include <iostream>
+#include <cstdlib>
+#include <string>
+#include <omp.h>
+using namespace std;
+
+const int a = 10000, b = 10000;
+double M[a][b];
+double x[b];
+double res[a];
+
+const int n = 1000, m = 500, p = 1000;
+double A[n][m];
+double B[m][p];
+double C[n][p], C_par[n][p];
+
+int main()
+{
+	setlocale(LC_ALL, "Russian");
+	
+	for (int i = 0; i < a; i++) {
+		for (int j = 0; j < b; j++) {
+			M[i][j] = 10 * i + j;
+		}
+	}
+	for (int j = 0; j < b; j++) {
+		x[j] = j + 3;
+	}
+
+	//Последовательно
+	double t1 = omp_get_wtime();
+	for (int i = 0; i < a; i++) {
+		res[i] = 0;
+		for (int j = 0; j < b; j++) {
+			res[i] += M[i][j] * x[j];
+		}
+	}
+
+	cout << "Time: " << omp_get_wtime() - t1 << endl;
+
+	//Параллельно
+	double t2 = omp_get_wtime();
+#pragma omp parallel for schedule(static)
+	for (int i = 0; i < a; i++) {
+		res[i] = 0;
+		for (int j = 0; j < b; j++) {
+			res[i] += M[i][j] * x[j];
+		}
+	}
+	cout << "Time: " << omp_get_wtime() - t2 << endl;
+	
+
+	//4
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < m; j++) {
+			A[i][j] = i * 10 + j;
+		}
+	}
+	for (int i = 0; i < m; i++) {
+		for (int j = 0; j < p; j++) {
+			B[i][j] = i * 10 + j;
+		}
+	}
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < p; j++) {
+			C[i][j] = 0;
+			C_par[i][j] = 0;
+		}
+	}
+
+	cout << endl << "Task 4" << endl;
+	double t3 = omp_get_wtime();
+	for (int i = 0; i < n; i++) {
+		for (int k = 0; k < p; k++) {
+			for (int j = 0; j < m; j++) {
+				C[i][k] += A[i][j] * B[j][k];
+			}
+		}
+	}
+
+	cout << "Time: " << omp_get_wtime() - t3 << endl;
+	
+	t3 = omp_get_wtime();
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j< m; j++) {
+			for (int k = 0; k < p; k++) {
+				C[i][k] += A[i][j] * B[j][k];
+			}
+		}
+	}
+
+	cout << "Time: " << omp_get_wtime() - t3 << endl;
+
+	double t4 = omp_get_wtime();
+#pragma omp parallel for schedule(static)
+	for (int i = 0; i < n; i++) {
+		for (int k = 0; k < p; k++) {
+			for (int j = 0; j < m; j++) {
+				C[i][k] += A[i][j] * B[j][k];
+			}
+		}
+	}
+
+	cout << "Time: " << omp_get_wtime() - t4 << endl;
+	return EXIT_SUCCESS;
+}
