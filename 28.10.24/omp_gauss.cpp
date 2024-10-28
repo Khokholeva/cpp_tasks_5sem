@@ -252,7 +252,7 @@ void paral_low_gj() {
 	double m;
 	int id;
 	double ms[12]; //будет работать если не более 12 параллельных процессов
-	int ids[12];
+	int ids[12] = {0};
 
 	for (int k = 0; k < a; k++)
 	{
