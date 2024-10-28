@@ -251,16 +251,31 @@ void paral_low_gj() {
 	double t = omp_get_wtime();
 	double m;
 	int id;
+	double ms[12]; //будет работать если не более 12 параллельных процессов
+	int ids[12];
 
 	for (int k = 0; k < a; k++)
 	{
 		m = 0;
+		for (int i = 0; i < 12;i++) {
+			ms[i] = 0;
+		}
 		//Находим строку с макс k-ым элементом
-		//Не распараллелить с for?
-		for (int i = k; i < a; i++) {
-			if (abs(M_low[i][k]) > abs(m)) {
-				m = M_low[i][k];
-				id = i;
+#pragma omp parallel
+		{
+			int thr = omp_get_thread_num();
+			int num = omp_get_num_threads();
+			for (int i = k+thr; i < a; i+=num) {
+				if (abs(M_low[i][k]) > abs(ms[thr])) {
+					ms[thr] = M_low[i][k];
+					ids[thr] = i;
+				}
+			}
+		}
+		for (int i = 0; i < 12; i++) {
+			if (abs(m) < abs(ms[i])) {
+				m = ms[i];
+				id = ids[i];
 			}
 		}
 		if (m == 0) continue;
@@ -314,7 +329,7 @@ int main()
 			cout << endl;
 		}
 	}
-
+	cout << "Размер " << a << endl;
 	//Последовательно
 	gauss_jord();
 	
